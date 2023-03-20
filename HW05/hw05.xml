@@ -1,0 +1,90 @@
+<project name="PrintJobExecutor" basedir="." default="clean" xmlns:ivy="antlib:org.apache.ivy.ant" >
+    <property name="project" value="hw05"/>
+<!--    <property name="file" value="SecurityContext"/>-->
+    <property name="test_path" value="test"/>
+
+    <property name="src" value="src"/>
+    <property name="bin" value="bin"/>
+    <property name="src.test" value="${test_path}/src"/>
+    <property name="bin.test" value="${test_path}/bin"/>
+    <property name="reports.test" value="${test_path}/reports"/>
+    <property name="ivy.lib" value="lib"/>
+
+    <path id="classpath">
+        <pathelement location="${bin}"/>
+        <pathelement location="${bin.test}"/>
+        <fileset dir="${ivy.lib}"/>
+    </path>
+
+    <target name="init">
+        <mkdir dir="${bin}"/>
+        <mkdir dir="${bin.test}"/>
+        <mkdir dir="${reports.test}"/>
+        <mkdir dir="${ivy.lib}"/>
+    </target>
+
+    <target name="resolve" depends="init"
+            description="--> Download JAR files (listed in ivy.xml) to the 'lib' directory.">
+        <ivy:retrieve/>
+    </target>
+
+    <target name="compile" depends="resolve">
+        <javac srcdir="${src}" destdir="${bin}" includeAntRuntime="no">
+            <classpath refid="classpath"/>
+            <include name="edu/umb/cs680/${project}/ModelABC/PrintJobExecutor.java"/>
+        </javac>
+        <javac srcdir="${src}" destdir="${bin}" includeAntRuntime="no">
+            <classpath refid="classpath"/>
+            <include name="edu/umb/cs680/${project}/ModelXYZ/PrintJobExecutor.java"/>
+        </javac>
+        <javac srcdir="${src.test}" destdir="${bin.test}" includeAntRuntime="no">
+            <classpath refid="classpath"/>
+            <include name="edu/umb/cs680/${project}/ModelABC/PrintJobExecutorTest.java"/>
+        </javac>
+        <javac srcdir="${src.test}" destdir="${bin.test}" includeAntRuntime="no">
+            <classpath refid="classpath"/>
+            <include name="edu/umb/cs680/${project}/ModelXYZ/PrintJobExecutorTest.java"/>
+        </javac>
+
+    </target>
+
+    <target name="run" depends="compile">
+        <java classname="edu.umb.cs680.${project}.ModelABC.PrintJobExecutor"
+              classpathref="classpath"
+              fork="true"/>
+        <java classname="edu.umb.cs680.${project}.ModelXYZ.PrintJobExecutor"
+              classpathref="classpath"
+              fork="true"/>
+    </target>
+
+    <target name="junit_test" depends="run">
+        <junitlauncher haltonfailure="true" printSummary="yes">
+            <classpath refid="classpath"/>
+            <testclasses outputdir="${basedir}/${reports.test}">
+                <fileset dir="${bin.test}">
+                    <include name="edu/umb/cs680/${project}/**/*Test.class"/>
+                </fileset>
+                <listener type="legacy-xml" sendSysOut="true" sendSysErr="true"/>
+                <listener type="legacy-plain" sendSysOut="true" />
+            </testclasses>
+        </junitlauncher>
+    </target>
+
+    <target name="clean" depends="junit_test">
+        <echo message="Delete class files" level="info"/>
+        <delete description="Delete class file">
+            <fileset dir="${bin}/edu/umb/cs680/${project}" includes="**/*"/>
+        </delete>
+        <echo message="Delete test class files" level="info"/>
+        <delete description="Delete test class file">
+            <fileset dir="${bin.test}/edu/umb/cs680/${project}" includes="**/*"/>
+        </delete>
+        <!--        <delete dir="${bin}" />-->
+        <!--        <delete dir="${bin_test}" />-->
+    </target>
+
+    <target name="clean-cache"
+            description="--> clean the ivy cache (by default ~/.ivy2/cache)">
+        <ivy:cleancache/>
+    </target>
+</project>
